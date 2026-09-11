@@ -25,29 +25,30 @@ Español (Duolingo)
 
 ## Setup
 
-### 1. Duolingo credentials
+Needs Docker Engine with the compose plugin (amd64 or arm64).
+
+### 1. Clone
+
+```sh
+git clone https://github.com/wittenbe/duolingo-to-anki.git && cd duolingo-to-anki
+cp .env.example .env
+```
+
+### 2. Add your Duolingo credentials to `.env`
 
 - **`DUOLINGO_TOKEN`**: log in on duolingo.com, open the browser dev tools and copy the
-  value of the `jwt_token` cookie. Put it in `.env` with a `Bearer ` prefix:
+  value of the `jwt_token` cookie. Add a `Bearer ` prefix:
   `DUOLINGO_TOKEN=Bearer eyJ...`
 - **`DUOLINGO_USER_ID`**: the `sub` field of that token's payload. Decode the middle part
   of the JWT, e.g. on jwt.io.
 
-```sh
-cp .env.example .env    # then fill in both values
-```
-
-### 2. Deploy with Docker
-
-Needs Docker Engine with the compose plugin (amd64 or arm64).
+### 3. Start
 
 ```sh
-git clone https://github.com/wittenbe/duolingo-to-anki.git && cd duolingo-to-anki
-cp .env.example .env    # fill in the credentials
 docker compose up -d --build
 ```
 
-### 3. Log in to AnkiWeb (once)
+### 4. Log in to AnkiWeb (once)
 
 The fresh `anki` container starts with an empty collection. Until it's logged in and has
 downloaded your collection, every poller run stops at its first step, which is harmless.
@@ -86,7 +87,7 @@ Set in `.env`. `compose.yaml` already sets `ANKI_URL` and `VOCAB_FILE` for the c
 
 | Variable | Default | |
 |---|---|---|
-| `DUOLINGO_USER_ID` | required | See [credentials](#1-duolingo-credentials) |
+| `DUOLINGO_USER_ID` | required | See [credentials](#2-add-your-duolingo-credentials-to-env) |
 | `DUOLINGO_TOKEN` | required | `Bearer <jwt>` |
 | `ANKI_URL` | `http://localhost:8765` | AnkiConnect endpoint |
 | `POLL_INTERVAL_MINUTES` | `10` | How often to check Duolingo for new words |
@@ -154,7 +155,7 @@ problems found in testing:
 - **Update**: `git pull && docker compose up -d --build`. AnkiConnect is copied into the
   volume only when the volume is first created; after that Anki keeps it updated.
 - **"auth not configured"**: the AnkiWeb login is missing, e.g. after a fresh volume or an
-  unclean shutdown right after logging in. Repeat the [AnkiWeb login](#3-log-in-to-ankiweb-once).
+  unclean shutdown right after logging in. Repeat the [AnkiWeb login](#4-log-in-to-ankiweb-once).
 - **"Sync status 2 not one of [0, 1]"**: a structural change (note type, field or card
   template added or removed) requires a full sync, which AnkiConnect can't do. Resolve
   it over VNC: choose **Download** if the change was made elsewhere, e.g. on your
