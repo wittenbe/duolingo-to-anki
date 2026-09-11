@@ -23,10 +23,9 @@ Español (Duolingo)
 - When Duolingo changes a word's translation, the existing card is edited in place,
   so its review history is kept.
 
-It also keeps a **vocabulary prompt** up to date: a text file with tutoring
-instructions plus every word you've learned. Give it to Claude, Gemini or any other
-chatbot, and it quizzes you with sentences that use only words you know. Optionally the
-prompt is uploaded to a Google Drive file, so the latest version is always in one place.
+Optionally it also keeps a **vocabulary prompt** up to date in a Google Drive file:
+tutoring instructions plus every word you've learned. Give it to Claude, Gemini or any
+other chatbot, and it quizzes you with sentences that use only words you know.
 
 ## Setup
 
@@ -75,7 +74,7 @@ in again.
 Run only one poller per AnkiWeb account. Two instances adding the same new word at the
 same time would create duplicate notes once both sync.
 
-### Optional: upload the prompt to Google Drive
+### Optional: vocabulary prompt in Google Drive
 
 1. In Google Cloud Console:
    1. Create a project and enable the **Google Drive API**.
@@ -113,7 +112,7 @@ npm run poll     # the 10-minute loop
 
 ## Configuration
 
-Set in `.env`. `compose.yaml` already sets `ANKI_URL` and `VOCAB_FILE` for the container.
+Set in `.env`. `compose.yaml` already sets `ANKI_URL` for the container.
 
 | Variable | Default | |
 |---|---|---|
@@ -122,9 +121,8 @@ Set in `.env`. `compose.yaml` already sets `ANKI_URL` and `VOCAB_FILE` for the c
 | `ANKI_URL` | `http://localhost:8765` | AnkiConnect endpoint |
 | `POLL_INTERVAL_MINUTES` | `10` | How often to check Duolingo for new words |
 | `FULL_SYNC_INTERVAL_HOURS` | `24` | Forced full sync, catches edited translations |
-| `GOOGLE_DRIVE_FILE_ID` | unset | Drive file to overwrite with the prompt; unset disables the upload |
+| `GOOGLE_DRIVE_FILE_ID` | unset | Drive file to overwrite with the prompt; unset disables the prompt |
 | `GOOGLE_SERVICE_ACCOUNT_KEY` | `google-service-account.json` | Service account key file |
-| `VOCAB_FILE` | `spanish_vocab_prompt.txt` | Local copy of the prompt; empty string disables it |
 
 ## How it works
 
@@ -217,7 +215,7 @@ src/
   config.ts           env config, deck names
   duolingo/           typed Duolingo client + zod schemas
   anki/               AnkiConnect client, note type, sync logic
-  prompt/             renders the vocabulary prompt, writes/uploads it on change
+  prompt/             renders the vocabulary prompt, uploads it on change
   google/             minimal Google Drive client (service account)
 prompt/               prompt template (template.example.md, your template.md)
 docker/anki/          headless Anki image + entrypoint

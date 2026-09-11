@@ -22,7 +22,6 @@ services:
     env_file: .env
     environment:
       ANKI_URL: http://anki:8765
-      VOCAB_FILE: ""
     volumes:
       # A directory, not the file: editors replace files on save, which a file mount wouldn't see.
       - ./prompt:/app/prompt:ro

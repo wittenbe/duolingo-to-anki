@@ -5,7 +5,6 @@ import {
   GOOGLE_DRIVE_FILE_ID,
   GOOGLE_SERVICE_ACCOUNT_KEY,
   PROMPT_DIR,
-  VOCAB_FILE,
 } from "./config.js";
 import { fetchLearnedVocab } from "./duolingo/client.js";
 import { createAnkiClient } from "./anki/client.js";
@@ -13,18 +12,17 @@ import { pushToAnki } from "./anki/sync.js";
 import { createDriveClient } from "./google/drive.js";
 import { createPromptPublisher } from "./prompt/publisher.js";
 
-const promptPublisher = createPromptPublisher({
-  templateDir: PROMPT_DIR,
-  localFile: VOCAB_FILE || undefined,
-  drive: GOOGLE_DRIVE_FILE_ID
-    ? { client: createDriveClient(GOOGLE_SERVICE_ACCOUNT_KEY), fileId: GOOGLE_DRIVE_FILE_ID }
-    : undefined,
-});
+const promptPublisher = GOOGLE_DRIVE_FILE_ID
+  ? createPromptPublisher({
+      templateDir: PROMPT_DIR,
+      drive: { client: createDriveClient(GOOGLE_SERVICE_ACCOUNT_KEY), fileId: GOOGLE_DRIVE_FILE_ID },
+    })
+  : undefined;
 
 /** Publishes the vocabulary prompt if it (or its template) changed; failures are logged, not thrown. */
 export async function publishPrompt(): Promise<void> {
   try {
-    await promptPublisher.publishIfChanged();
+    await promptPublisher?.publishIfChanged();
   } catch (err) {
     console.error("Publishing the vocabulary prompt failed, will retry next poll:", err);
   }
@@ -35,7 +33,7 @@ export async function runSync(): Promise<void> {
   const vocab = await fetchLearnedVocab(DUOLINGO_CONFIG, { log: console.log });
   console.log(`Got ${vocab.length} words\n`);
 
-  promptPublisher.setVocabulary(vocab.map((v) => v.text));
+  promptPublisher?.setVocabulary(vocab.map((v) => v.text));
   await publishPrompt();
 
   const anki = createAnkiClient(ANKI_URL);

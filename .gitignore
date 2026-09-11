@@ -3,5 +3,4 @@ dist/
 .env
 google-service-account.json
 prompt/template.md
-spanish_vocab_prompt.txt
 .idea/

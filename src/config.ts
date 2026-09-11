@@ -15,9 +15,7 @@ export const ANKI_DECKS: AnkiDecks = {
   esEn: "Español (Duolingo)::Spanish → English",
 };
 export const PROMPT_DIR = "prompt";
-// Set to an empty string to skip writing the prompt file.
-export const VOCAB_FILE = process.env.VOCAB_FILE ?? "spanish_vocab_prompt.txt";
-// Unset disables uploading the prompt to Google Drive.
+// Unset disables the vocabulary prompt.
 export const GOOGLE_DRIVE_FILE_ID = process.env.GOOGLE_DRIVE_FILE_ID || undefined;
 export const GOOGLE_SERVICE_ACCOUNT_KEY = process.env.GOOGLE_SERVICE_ACCOUNT_KEY ?? "google-service-account.json";
 

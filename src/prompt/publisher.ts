@@ -1,4 +1,4 @@
-import { existsSync, readFileSync, writeFileSync } from "fs";
+import { existsSync, readFileSync } from "fs";
 import { join } from "path";
 import type { DriveClient } from "../google/drive.js";
 
@@ -6,8 +6,7 @@ const PLACEHOLDER = "{{vocabulary}}";
 
 export interface PromptPublisherOptions {
   templateDir: string;
-  localFile?: string;
-  drive?: { client: DriveClient; fileId: string };
+  drive: { client: DriveClient; fileId: string };
 }
 
 export interface PromptPublisher {
@@ -42,14 +41,8 @@ export function createPromptPublisher(options: PromptPublisherOptions): PromptPu
       const content = render(words);
       if (content === lastPublished) return;
 
-      if (options.localFile) {
-        writeFileSync(options.localFile, content, "utf-8");
-        console.log(`Wrote vocabulary prompt to ${options.localFile}`);
-      }
-      if (options.drive) {
-        const uploaded = await options.drive.client.updateFileIfChanged(options.drive.fileId, content);
-        console.log(uploaded ? "Uploaded vocabulary prompt to Google Drive" : "Google Drive prompt already up to date");
-      }
+      const uploaded = await options.drive.client.updateFileIfChanged(options.drive.fileId, content);
+      console.log(uploaded ? "Uploaded vocabulary prompt to Google Drive" : "Google Drive prompt already up to date");
       lastPublished = content;
     },
   };
