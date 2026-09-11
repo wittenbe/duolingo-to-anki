@@ -1,0 +1,31 @@
+services:
+  anki:
+    build: docker/anki
+    restart: unless-stopped
+    # Anki saves its profile (incl. the AnkiWeb login) only on a clean shutdown, which may include a sync.
+    stop_grace_period: 60s
+    volumes:
+      - anki-data:/data
+    ports:
+      # VNC has no password: only reachable from the host itself. From elsewhere, use an SSH tunnel.
+      - "127.0.0.1:5900:5900"
+    healthcheck:
+      # Via the container's own hostname, not localhost: AnkiConnect must accept connections from the poller.
+      test: ["CMD-SHELL", "curl -sf -X POST \"http://$$(hostname):8765\" -d '{\"action\":\"version\",\"version\":6}'"]
+      interval: 30s
+      timeout: 5s
+      start_period: 60s
+
+  poller:
+    build: .
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      ANKI_URL: http://anki:8765
+      VOCAB_FILE: ""
+    depends_on:
+      anki:
+        condition: service_healthy
+
+volumes:
+  anki-data:

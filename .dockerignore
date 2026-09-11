@@ -1,0 +1,7 @@
+node_modules
+.env
+.git
+.idea
+docs
+docker
+spanish_vocab_prompt.txt

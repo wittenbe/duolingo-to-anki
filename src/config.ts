@@ -14,6 +14,7 @@ export const ANKI_DECKS: AnkiDecks = {
   enEs: "Español (Duolingo)::English → Spanish",
   esEn: "Español (Duolingo)::Spanish → English",
 };
+// Set to an empty string to skip writing the prompt file.
 export const VOCAB_FILE = process.env.VOCAB_FILE ?? "spanish_vocab_prompt.txt";
 
 export const POLL_INTERVAL_MINUTES = Number(process.env.POLL_INTERVAL_MINUTES ?? 10);
