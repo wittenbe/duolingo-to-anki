@@ -23,6 +23,11 @@ Español (Duolingo)
 - When Duolingo changes a word's translation, the existing card is edited in place,
   so its review history is kept.
 
+It also keeps a **vocabulary prompt** up to date: a text file with tutoring
+instructions plus every word you've learned. Give it to Claude, Gemini or any other
+chatbot, and it quizzes you with sentences that use only words you know. Optionally the
+prompt is uploaded to a Google Drive file, so the latest version is always in one place.
+
 ## Setup
 
 Needs Docker Engine with the compose plugin (amd64 or arm64).
@@ -70,6 +75,31 @@ in again.
 Run only one poller per AnkiWeb account. Two instances adding the same new word at the
 same time would create duplicate notes once both sync.
 
+### Optional: upload the prompt to Google Drive
+
+1. In Google Cloud Console:
+   1. Create a project and enable the **Google Drive API**.
+   2. Create a service account; it needs no roles.
+   3. Under its **Keys** tab, choose **Add key → JSON**.
+   4. Save the key as `google-service-account.json` in the repo folder. It's gitignored.
+      In Docker the container runs as uid 1000, so that user must be able to read the file.
+2. In Google Drive, create or upload the prompt file (e.g. a `.txt`), and share it with
+   the service account's email as **Editor**. Service accounts have no Drive storage of
+   their own, so they can overwrite a file you own but can't create one.
+3. Set `GOOGLE_DRIVE_FILE_ID` in `.env`. The ID is the part between `/d/` and `/view` in
+   the file's link.
+
+The file's contents are replaced only when the prompt actually changed. Its ID stays
+the same, so links and chatbot attachments keep working.
+
+### Customizing the prompt
+
+The default prompt is `prompt/template.example.md`. To change it, copy it to
+`prompt/template.md` (gitignored, so `git pull` never conflicts with your edits) and
+edit it. `{{vocabulary}}` is replaced with your words, one per line. The template is
+re-read on every poll, so edits are published within 10 minutes, with no rebuild or
+restart.
+
 ### Without Docker
 
 Against Anki desktop with the [AnkiConnect](https://ankiweb.net/shared/info/2055492159)
@@ -92,7 +122,9 @@ Set in `.env`. `compose.yaml` already sets `ANKI_URL` and `VOCAB_FILE` for the c
 | `ANKI_URL` | `http://localhost:8765` | AnkiConnect endpoint |
 | `POLL_INTERVAL_MINUTES` | `10` | How often to check Duolingo for new words |
 | `FULL_SYNC_INTERVAL_HOURS` | `24` | Forced full sync, catches edited translations |
-| `VOCAB_FILE` | `spanish_vocab_prompt.txt` | Writes a tutoring prompt for an LLM with all your learned words; empty string disables it |
+| `GOOGLE_DRIVE_FILE_ID` | unset | Drive file to overwrite with the prompt; unset disables the upload |
+| `GOOGLE_SERVICE_ACCOUNT_KEY` | `google-service-account.json` | Service account key file |
+| `VOCAB_FILE` | `spanish_vocab_prompt.txt` | Local copy of the prompt; empty string disables it |
 
 ## How it works
 
@@ -109,14 +141,16 @@ A failed poll is logged and retried at the next interval.
 
 ### Full sync (`src/run-sync.ts`)
 
-1. **Sync with AnkiWeb first.** If that fails, stop without touching the collection.
-   An unsynced collection (fresh container, logged out, full sync pending) must never
-   be modified, or it could later overwrite AnkiWeb.
-2. Fetch all learned words from Duolingo (4 requests of 500) and validate the response
+1. Fetch all learned words from Duolingo (4 requests of 500) and validate the response
    shape with zod (`src/duolingo/schemas.ts`).
-3. Add new notes, update changed ones, prune stale ones and file cards into their
+2. Publish the vocabulary prompt if it changed. This doesn't depend on Anki, and a
+   failure is logged and retried at the next poll.
+3. **Sync with AnkiWeb before touching Anki.** If that fails, stop without changing the
+   collection. An unsynced collection (fresh container, logged out, full sync pending)
+   must never be modified, or it could later overwrite AnkiWeb.
+4. Add new notes, update changed ones, prune stale ones and file cards into their
    subdecks (`src/anki/sync.ts`).
-4. Sync with AnkiWeb again, only if something changed.
+5. Sync with AnkiWeb again, only if something changed.
 
 ### Handling Duolingo's data
 
@@ -183,7 +217,9 @@ src/
   config.ts           env config, deck names
   duolingo/           typed Duolingo client + zod schemas
   anki/               AnkiConnect client, note type, sync logic
-  vocab-file.ts       LLM tutoring prompt file
+  prompt/             renders the vocabulary prompt, writes/uploads it on change
+  google/             minimal Google Drive client (service account)
+prompt/               prompt template (template.example.md, your template.md)
 docker/anki/          headless Anki image + entrypoint
 compose.yaml, Dockerfile
 ```

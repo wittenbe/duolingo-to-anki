@@ -1,7 +1,7 @@
 import { setTimeout as sleep } from "timers/promises";
 import { DUOLINGO_CONFIG, FULL_SYNC_INTERVAL_HOURS, POLL_INTERVAL_MINUTES } from "./config.js";
 import { fetchVocabFingerprint } from "./duolingo/client.js";
-import { runSync } from "./run-sync.js";
+import { publishPrompt, runSync } from "./run-sync.js";
 
 const pollIntervalMs = POLL_INTERVAL_MINUTES * 60_000;
 const fullSyncIntervalMs = FULL_SYNC_INTERVAL_HOURS * 3_600_000;
@@ -41,5 +41,7 @@ while (true) {
   } catch (err) {
     console.error(`[${new Date().toISOString()}] Tick failed, will retry next interval:`, err);
   }
+  // Also picks up template edits and retries failed uploads between full syncs.
+  await publishPrompt();
   await sleep(pollIntervalMs);
 }

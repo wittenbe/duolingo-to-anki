@@ -23,6 +23,11 @@ services:
     environment:
       ANKI_URL: http://anki:8765
       VOCAB_FILE: ""
+    volumes:
+      # A directory, not the file: editors replace files on save, which a file mount wouldn't see.
+      - ./prompt:/app/prompt:ro
+      # Only read when GOOGLE_DRIVE_FILE_ID is set.
+      - ./google-service-account.json:/app/google-service-account.json:ro
     depends_on:
       anki:
         condition: service_healthy
