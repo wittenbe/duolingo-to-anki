@@ -6,6 +6,7 @@
   "private": true,
   "scripts": {
     "start": "tsx src/index.ts",
+    "poll": "tsx src/poll.ts",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
