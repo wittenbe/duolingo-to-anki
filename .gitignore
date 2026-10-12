@@ -3,4 +3,5 @@ dist/
 .env
 google-service-account.json
 prompt/template.md
+prompt/daily.md
 .idea/

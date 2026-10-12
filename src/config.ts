@@ -17,6 +17,11 @@ export const ANKI_DECKS: AnkiDecks = {
 export const PROMPT_DIR = "prompt";
 // Unset disables the vocabulary prompt.
 export const GOOGLE_DRIVE_FILE_ID = process.env.GOOGLE_DRIVE_FILE_ID || undefined;
+// Unset disables the daily drill prompt.
+export const GOOGLE_DRIVE_DAILY_FILE_ID = process.env.GOOGLE_DRIVE_DAILY_FILE_ID || undefined;
+// How many words one drill session gets, and how many grammar concepts it leans on.
+export const DRILL_WORD_COUNT = Number(process.env.DRILL_WORD_COUNT ?? 40);
+export const DRILL_SPOTLIGHT_COUNT = Number(process.env.DRILL_SPOTLIGHT_COUNT ?? 3);
 export const GOOGLE_SERVICE_ACCOUNT_KEY = process.env.GOOGLE_SERVICE_ACCOUNT_KEY ?? "google-service-account.json";
 
 export const POLL_INTERVAL_MINUTES = Number(process.env.POLL_INTERVAL_MINUTES ?? 10);

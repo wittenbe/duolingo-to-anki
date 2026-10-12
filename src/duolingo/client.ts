@@ -1,5 +1,6 @@
 import { z } from "zod";
-import { LearnedLexemesResponseSchema, ProfileSchema } from "./schemas.js";
+import { LearnedLexemesResponseSchema, ProfileSchema, type Profile } from "./schemas.js";
+import { classifyUnits } from "./guidebook.js";
 import type { VocabItem } from "./types.js";
 
 export interface DuolingoConfig {
@@ -29,13 +30,16 @@ function parseOrThrow<T>(schema: z.ZodType<T>, data: unknown, context: string): 
   return result.data;
 }
 
-async function buildProgressedSkillsBody(config: DuolingoConfig) {
+/** The profile carries both the skill progress the lexeme endpoint wants and the path with its guidebooks. */
+export async function fetchProfile(config: DuolingoConfig): Promise<Profile> {
   const url = `https://www.duolingo.com/2023-05-23/users/${config.userId}?fields=currentCourse&_=${Date.now()}`;
   const res = await fetch(url, { headers: headersFor(config) });
   if (!res.ok) throw new Error(`Profile fetch failed: ${res.status}`);
 
-  const profile = parseOrThrow(ProfileSchema, await res.json(), "user profile");
+  return parseOrThrow(ProfileSchema, await res.json(), "user profile");
+}
 
+function progressedSkillsBody(profile: Profile) {
   const progressedSkills = profile.currentCourse.skills
     .flat()
     .filter((s) => s.finishedLessons > 0 && s.finishedLevels > 0)
@@ -48,7 +52,7 @@ async function buildProgressedSkillsBody(config: DuolingoConfig) {
   return { progressedSkills };
 }
 
-type ProgressedSkillsBody = Awaited<ReturnType<typeof buildProgressedSkillsBody>>;
+type ProgressedSkillsBody = ReturnType<typeof progressedSkillsBody>;
 
 // Results are ordered newest-learned first.
 async function fetchLearnedLexemesPage(
@@ -72,20 +76,25 @@ async function fetchLearnedLexemesPage(
   );
 }
 
-/** Cheap change detector: total learned count plus the most recently learned word. */
+/**
+ * Cheap change detector: total learned count, the most recently learned word, and how many path
+ * units are finished. The last one catches a unit whose grammar is new but whose words are not.
+ */
 export async function fetchVocabFingerprint(config: DuolingoConfig): Promise<string> {
-  const body = await buildProgressedSkillsBody(config);
-  const { learnedLexemes, pagination } = await fetchLearnedLexemesPage(config, body, 0, 1);
-  return `${pagination.totalLexemes}:${learnedLexemes[0]?.text ?? ""}`;
+  const profile = await fetchProfile(config);
+  const { learnedLexemes, pagination } = await fetchLearnedLexemesPage(config, progressedSkillsBody(profile), 0, 1);
+  const finishedUnits = classifyUnits(profile.currentCourse.pathSectioned).finished.length;
+  return `${pagination.totalLexemes}:${learnedLexemes[0]?.text ?? ""}:${finishedUnits}`;
 }
 
 export async function fetchLearnedVocab(
   config: DuolingoConfig,
+  profile: Profile,
   options: FetchLearnedVocabOptions = {},
 ): Promise<VocabItem[]> {
   const log = options.log ?? (() => {});
 
-  const body = await buildProgressedSkillsBody(config);
+  const body = progressedSkillsBody(profile);
   log(`Built body: ${body.progressedSkills.length} skills`);
 
   let offset = 0;
