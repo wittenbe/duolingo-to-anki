@@ -45,8 +45,9 @@ export async function runSync(): Promise<void> {
     await anki.request("sync");
   } catch (err) {
     throw new Error(
-      `AnkiWeb sync failed, not touching the collection. If this is a fresh setup or a full sync is ` +
-        `pending, open Anki over VNC, log in and sync (choose Download). Cause: ${(err as Error).message}`,
+      `AnkiWeb sync failed, not touching the collection. On a fresh setup, open Anki over VNC, log in ` +
+        `and sync (choose Download). If a full sync is pending, do it over VNC as well; the README says ` +
+        `which direction. Cause: ${(err as Error).message}`,
     );
   }
 

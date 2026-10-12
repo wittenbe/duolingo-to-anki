@@ -102,7 +102,7 @@ async function placeCardsByDirection(anki: AnkiClient, decks: AnkiDecks): Promis
 }
 
 export async function pushToAnki(anki: AnkiClient, items: VocabItem[], decks: AnkiDecks): Promise<PushResult> {
-  await ensureNoteType(anki);
+  const noteTypeChanged = await ensureNoteType(anki);
   await anki.ensureDeck(decks.enEs);
   await anki.ensureDeck(decks.esEn);
 
@@ -173,5 +173,5 @@ export async function pushToAnki(anki: AnkiClient, items: VocabItem[], decks: An
       (moved > 0 ? `, ${moved} cards moved to their direction's subdeck` : ""),
   );
 
-  return { hasChanges: toAdd.length + updated + deleted + audioAdded + moved > 0 };
+  return { hasChanges: noteTypeChanged || toAdd.length + updated + deleted + audioAdded + moved > 0 };
 }

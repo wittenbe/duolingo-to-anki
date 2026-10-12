@@ -11,17 +11,19 @@ Currently hardcoded to the Spanish-from-English course.
 
 ```
 Español (Duolingo)
-├─ English → Spanish   "they" → ellas (also accepted: ellos) 🔊
-└─ Spanish → English   ellas 🔊 → "they"
+├─ English → Spanish   "they" (a group of women) → ellas (also accepted: ellos) 🔊
+└─ Spanish → English   ellas 🔊 → "they" (a group of women)
 ```
 
 - One note per Spanish word, on a custom note type `Duolingo Spanish` with fields
-  `Spanish`, `English`, `AlsoAccepted` and `Audio`.
+  `Spanish`, `English`, `AlsoAccepted`, `Audio` and `Notes`.
 - Each note has two cards, filed into the two subdecks.
 - English → Spanish cards list other Spanish words with exactly the same English
   as "also accepted", so ambiguous prompts can still be graded fairly.
 - When Duolingo changes a word's translation, the existing card is edited in place,
   so its review history is kept.
+- `Notes` is yours. Whatever you type there is shown on both cards and is never
+  overwritten by the sync, see [your own notes](#your-own-notes).
 
 Optionally it also keeps a **vocabulary prompt** up to date in a Google Drive file:
 tutoring instructions plus every word you've learned. Give it to Claude, Gemini or any
@@ -98,6 +100,30 @@ The default prompt is `prompt/template.example.md`. To change it, copy it to
 edit it. `{{vocabulary}}` is replaced with your words, one per line. The template is
 re-read on every poll, so edits are published within 10 minutes, with no rebuild or
 restart.
+
+### Your own notes
+
+Duolingo's English is sometimes too vague to answer: "to leave" could be `salir` or
+`dejar`. The `Notes` field is for exactly that. Write into it wherever you review it —
+in Anki desktop, or mid-review on the phone (AnkiDroid: **More → Edit note**).
+
+It shows on the English → Spanish front, where the ambiguity is the problem, and on the
+Spanish → English back as extra context. The poller identifies notes by their Spanish
+word and only ever writes `English`, `AlsoAccepted` and `Audio`, so your text survives
+changed translations, full syncs and container rebuilds. It goes away only if the word
+disappears from Duolingo and its note is pruned.
+
+Your notes are the one thing here the poller can't recreate, so they only exist in the
+collection; Anki's own backups are the backstop.
+
+**One-time, when upgrading an existing deck:** the first run adds the `Notes` field to
+the note type and logs that it did. Adding a field is a schema change, so that run ends
+with `Sync status 2` and needs one manual full sync:
+
+1. Sync your phone and desktop first, so nothing is left unsynced anywhere.
+2. Over VNC, press **Sync** and choose **Upload**. Here that's the right direction: the
+   server holds your collection plus the new field.
+3. Your other devices will ask to download the full collection on their next sync.
 
 ### Without Docker
 
@@ -190,9 +216,9 @@ problems found in testing:
   unclean shutdown right after logging in. Repeat the [AnkiWeb login](#4-log-in-to-ankiweb-once).
 - **"Sync status 2 not one of [0, 1]"**: a structural change (note type, field or card
   template added or removed) requires a full sync, which AnkiConnect can't do. Resolve
-  it over VNC: choose **Download** if the change was made elsewhere, e.g. on your
-  desktop. Make structural changes on the desktop, not by editing
-  `src/anki/note-type.ts` against the server.
+  it over VNC: choose **Upload** if the poller made the change (it logs the field or
+  template it added, see [your own notes](#your-own-notes)), **Download** if it was made
+  elsewhere, e.g. on your desktop. Sync your other devices before uploading.
 
 ## Duolingo API notes
 
