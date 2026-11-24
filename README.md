@@ -16,14 +16,14 @@ Español (Duolingo)
 ```
 
 - One note per Spanish word, on a custom note type `Duolingo Spanish` with fields
-  `Spanish`, `English`, `AlsoAccepted`, `Audio` and `Notes`.
+  `Spanish`, `English`, `AlsoAccepted`, `Audio`, `Notes` and `NotesES`.
 - Each note has two cards, filed into the two subdecks.
 - English → Spanish cards list other Spanish words with exactly the same English
   as "also accepted", so ambiguous prompts can still be graded fairly.
 - When Duolingo changes a word's translation, the existing card is edited in place,
   so its review history is kept.
-- `Notes` is yours. Whatever you type there is shown on both cards and is never
-  overwritten by the sync, see [your own notes](#your-own-notes).
+- `Notes` and `NotesES` are yours. Whatever you type there is shown on the cards and
+  is never overwritten by the sync, see [your own notes](#your-own-notes).
 
 Optionally it also keeps two **tutoring prompts** up to date in Google Drive. Give either
 to Claude, Gemini or any other chatbot and it quizzes you with sentences you can actually
@@ -151,11 +151,16 @@ error, on the assumption that you mistyped it.
 ### Your own notes
 
 Duolingo's English is sometimes too vague to answer: "to leave" could be `salir` or
-`dejar`. The `Notes` field is for exactly that. Write into it wherever you review it —
+`dejar`. The other direction has the same problem: `quedar` has more meanings than one
+card can test. There are two fields for that. Write into them wherever you review —
 in Anki desktop, or mid-review on the phone (AnkiDroid: **More → Edit note**).
 
-It shows on the English → Spanish front, where the ambiguity is the problem, and on the
-Spanish → English back as extra context. The poller identifies notes by their Spanish
+| Field | Front of | Back of (as extra context) |
+| --- | --- | --- |
+| `Notes` | English → Spanish | Spanish → English |
+| `NotesES` | Spanish → English | English → Spanish |
+
+The poller identifies notes by their Spanish
 word and only ever writes `English`, `AlsoAccepted` and `Audio`, so your text survives
 changed translations, full syncs and container rebuilds. It goes away only if the word
 disappears from Duolingo and its note is pruned.
@@ -163,8 +168,8 @@ disappears from Duolingo and its note is pruned.
 Your notes are the one thing here the poller can't recreate, so they only exist in the
 collection; Anki's own backups are the backstop.
 
-**One-time, when upgrading an existing deck:** the first run adds the `Notes` field to
-the note type and logs that it did. Adding a field is a schema change, so that run ends
+**One-time, when upgrading an existing deck:** the first run adds any missing notes field
+(`Notes`, `NotesES`) to the note type and logs that it did. Adding a field is a schema change, so that run ends
 with `Sync status 2` and needs one manual full sync:
 
 1. Sync your phone and desktop first, so nothing is left unsynced anywhere.

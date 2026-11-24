@@ -3,7 +3,9 @@ import type { AnkiClient } from "./client.js";
 export const NOTE_TYPE_NAME = "Duolingo Spanish";
 
 // Spanish is the first field: Anki uses it as the note's identity for duplicate checks.
-// Notes is yours to fill in: the poller never reads or writes it, so it survives every update.
+// Notes and NotesES are yours to fill in: the poller never reads or writes them, so they
+// survive every update. Notes is the hint for the English → Spanish card, NotesES for the
+// Spanish → English one.
 export interface NoteFields {
   Spanish: string;
   English: string;
@@ -11,7 +13,7 @@ export interface NoteFields {
   Audio: string;
 }
 
-const FIELD_NAMES = ["Spanish", "English", "AlsoAccepted", "Audio", "Notes"];
+const FIELD_NAMES = ["Spanish", "English", "AlsoAccepted", "Audio", "Notes", "NotesES"];
 
 const CSS = `.card {
   font-family: arial;
@@ -26,8 +28,8 @@ const CSS = `.card {
 export const TEMPLATE_EN_ES = "English → Spanish";
 export const TEMPLATE_ES_EN = "Spanish → English";
 
-// The notes go on the English → Spanish front, where an unclear translation is the problem,
-// and on the Spanish → English back, where it is just extra context.
+// Each notes field goes on the front of its own card, where it disambiguates the prompt,
+// and on the back of the other card, where it is just extra context.
 const TEMPLATES = [
   {
     Name: TEMPLATE_EN_ES,
@@ -37,11 +39,13 @@ const TEMPLATES = [
 <hr id="answer">
 <div class="spanish">{{Spanish}}</div>
 {{#AlsoAccepted}}<div class="also">also accepted: {{AlsoAccepted}}</div>{{/AlsoAccepted}}
+{{#NotesES}}<div class="notes">{{NotesES}}</div>{{/NotesES}}
 {{Audio}}`,
   },
   {
     Name: TEMPLATE_ES_EN,
     Front: `<div class="spanish">{{Spanish}}</div>
+{{#NotesES}}<div class="notes">{{NotesES}}</div>{{/NotesES}}
 {{Audio}}`,
     Back: `{{FrontSide}}
 <hr id="answer">
